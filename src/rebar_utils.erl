@@ -75,8 +75,7 @@ is_arch(ArchRegex) ->
 get_arch() ->
     Words = wordsize(),
     erlang:system_info(otp_release) ++ "-"
-        ++ erlang:system_info(system_architecture) ++ "-" ++ Words
-        ++ "-" ++ os_family().
+        ++ erlang:system_info(system_architecture) ++ "-" ++ Words.
 
 wordsize() ->
     try erlang:system_info({wordsize, external}) of
@@ -318,10 +317,6 @@ processing_base_dir(Config, Dir) ->
 %% Internal functions
 %% ====================================================================
 
-os_family() ->
-    {OsFamily, _} = os:type(),
-    atom_to_list(OsFamily).
-
 get_deprecated_3(Get, Config, OldOpt, NewOpt, Default, When) ->
     case Get(Config, NewOpt, Default) of
         Default ->
@@ -356,7 +351,8 @@ patch_on_windows(Cmd, Env) ->
                                        expand_env_variable(Acc, Key, Value)
                                end, Cmd, Env),
             %% Remove left-over vars
-            re:replace(Cmd1, "\\\$\\w+|\\\${\\w+}", "", [global, {return, list}]);
+            re:replace(Cmd1, "\\\$\\w+|\\\${\\w+}", "",
+                       [global, {return, list}]);
         _ ->
             Cmd
     end.
@@ -475,10 +471,11 @@ vcs_vsn_1(Vcs, Dir) ->
             end
     end.
 
-vcs_vsn_cmd(git) -> "git describe --always --tags";
-vcs_vsn_cmd(hg)  -> "hg identify -i";
-vcs_vsn_cmd(bzr) -> "bzr revno";
-vcs_vsn_cmd(svn) -> "svnversion";
+vcs_vsn_cmd(git)    -> "git describe --always --tags";
+vcs_vsn_cmd(hg)     -> "hg identify -i";
+vcs_vsn_cmd(bzr)    -> "bzr revno";
+vcs_vsn_cmd(svn)    -> "svnversion";
+vcs_vsn_cmd(fossil) -> "fossil info";
 vcs_vsn_cmd({cmd, _Cmd}=Custom) -> Custom;
 vcs_vsn_cmd(Version) -> {unknown, Version}.
 

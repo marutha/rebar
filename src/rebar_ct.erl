@@ -26,14 +26,14 @@
 %% -------------------------------------------------------------------
 %%
 %% Targets:
-%% test - runs common test suites in ./test
-%% int_test - runs suites in ./int_test
-%% perf_test - runs suites inm ./perf_test
+%% test - run common test suites in ./test
+%% int_test - run suites in ./int_test
+%% perf_test - run suites inm ./perf_test
 %%
 %% Global options:
 %% verbose=1 - show output from the common_test run as it goes
-%% suites="foo,bar" - runs <test>/foo_SUITE and <test>/bar_SUITE
-%% case="mycase" - runs individual test case foo_SUITE:mycase
+%% suites="foo,bar" - run <test>/foo_SUITE and <test>/bar_SUITE
+%% case="mycase" - run individual test case foo_SUITE:mycase
 %% -------------------------------------------------------------------
 -module(rebar_ct).
 
@@ -65,7 +65,12 @@ run_test_if_present(TestDir, LogDir, Config, File) ->
                           ++ " SUITES - skipping\n", [TestDir]),
                     ok;
                 _ ->
-                    run_test(TestDir, LogDir, Config, File)
+                    try
+                        run_test(TestDir, LogDir, Config, File)
+                    catch
+                        throw:skip ->
+                            ok
+                    end
             end
     end.
 
@@ -270,8 +275,10 @@ find_suite_path(Suite, TestDir) ->
     Path = filename:join(TestDir, Suite ++ "_SUITE.erl"),
     case filelib:is_regular(Path) of
         false ->
-            ?ERROR("Suite ~s not found\n", [Suite]),
-            ?FAIL;
+            ?WARN("Suite ~s not found\n", [Suite]),
+            %% Note - this throw is caught in run_test_if_present/3;
+            %% this solution was easier than refactoring the entire module.
+            throw(skip);
         true ->
             Path
     end.
